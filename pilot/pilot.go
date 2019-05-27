@@ -33,6 +33,7 @@ const (
 	ENV_PILOT_LOG_PREFIX     = "PILOT_LOG_PREFIX"
 	ENV_PILOT_CREATE_SYMLINK = "PILOT_CREATE_SYMLINK"
 	ENV_LOGGING_OUTPUT       = "LOGGING_OUTPUT"
+	ENV_CLUSTER_ID           = "CLUSTER_ID"
 
 	ENV_SERVICE_LOGS_TEMPL   = "%s_logs_"
 	LABEL_SERVICE_LOGS_TEMPL = "%s.logs."
@@ -543,6 +544,7 @@ func (p *Pilot) parseLogConfig(name string, info *LogInfoNode, jsonLogPath strin
 		return nil, fmt.Errorf("parse tags for %s error: %v", name, err)
 	}
 
+	clusterId := os.Getenv(ENV_CLUSTER_ID)
 	target := info.get("target")
 	// add default index or topic
 	if _, ok := tagMap["index"]; !ok {
@@ -551,6 +553,9 @@ func (p *Pilot) parseLogConfig(name string, info *LogInfoNode, jsonLogPath strin
 		} else {
 			tagMap["index"] = name
 		}
+		if clusterId != "" {
+			tagMap["index"] = fmt.Sprintf("%s_%s", clusterId, tagMap["index"])
+		}
 	}
 
 	if _, ok := tagMap["topic"]; !ok {
@@ -558,6 +563,9 @@ func (p *Pilot) parseLogConfig(name string, info *LogInfoNode, jsonLogPath strin
 			tagMap["topic"] = target
 		} else {
 			tagMap["topic"] = name
+		}
+		if clusterId != ""{
+			tagMap["topic"] = fmt.Sprintf("%s_%s", clusterId, tagMap["topic"])
 		}
 	}
 
